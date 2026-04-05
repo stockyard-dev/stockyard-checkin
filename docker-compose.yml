@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+  checkin:
+    build: .
+    ports:
+      - "9807:9807"
+    volumes:
+      - checkin_data:/data
+    environment:
+      - PORT=9807
+volumes:
+  checkin_data:
