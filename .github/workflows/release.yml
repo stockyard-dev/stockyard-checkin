@@ -5,8 +5,9 @@
 # release/propagate-tool-release.sh. See ADR-001 for context.
 #
 # Triggers on tag push (v*). Matrix-builds four platforms,
-# UPX-compresses (except darwin-arm64), uploads raw binaries to
-# GitHub Releases under the ADR-001 naming convention:
+# UPX-compresses linux+windows (Mach-O is refused by current UPX),
+# uploads raw binaries to GitHub Releases under the ADR-001 naming
+# convention:
 #
 #   <tool>-<goos>-<goarch>
 #
@@ -49,10 +50,12 @@ jobs:
               go build -trimpath \
                 -ldflags="-s -w -X main.version=${VERSION}" \
                 -o "${OUT}" ./cmd/${TOOL}/
-            # UPX everywhere except darwin-arm64 — UPX Mach-O ARM64
-            # support is unreliable and resulting binaries often crash
-            # at runtime (see ADR-001).
-            if [ "${OS}-${ARCH}" != "darwin-arm64" ]; then
+            # UPX on linux + windows only. UPX 4.2.2 refuses Mach-O
+            # outright ("macOS is currently not supported") — the
+            # --force-macos flag exists but is experimental and
+            # produces binaries that crash at runtime. Darwin tools
+            # ship uncompressed. See ADR-001.
+            if [ "${OS}" != "darwin" ]; then
               upx --best --lzma "${OUT}"
             fi
             sha256sum "${OUT}"
